@@ -230,7 +230,7 @@ const PlanningPoker: React.FC = () => {
         fullWidth
       >
         <DialogTitle>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          <Typography sx={{ fontWeight: 600 }}>
             멀티 모드 설정
           </Typography>
         </DialogTitle>
