@@ -8,36 +8,42 @@ class WebSocketService {
   private reconnectTimeout = 1000;
   private messageHandlers: { [key: string]: ((payload: any) => void)[] } = {};
 
-  public connect() {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      return;
-    }
-
-    this.ws = new WebSocket('ws://localhost:3001');
-
-    this.ws.onopen = () => {
-      console.log('WebSocket Connected');
-      this.reconnectAttempts = 0;
-    };
-
-    this.ws.onclose = () => {
-      console.log('WebSocket Disconnected');
-      this.attemptReconnect();
-    };
-
-    this.ws.onerror = (error) => {
-      console.error('WebSocket Error:', error);
-    };
-
-    this.ws.onmessage = (event) => {
-      try {
-        const message: WebSocketMessage = JSON.parse(event.data);
-        const handlers = this.eventHandlers[message.type] || [];
-        handlers.forEach(handler => handler(message.payload));
-      } catch (error) {
-        console.error('Error parsing message:', error);
+  public connect(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        resolve();
+        return;
       }
-    };
+
+      this.ws = new WebSocket('ws://localhost:3001');
+
+      this.ws.onopen = () => {
+        console.log('WebSocket Connected');
+        this.reconnectAttempts = 0;
+        resolve();
+      };
+
+      this.ws.onclose = () => {
+        console.log('WebSocket Disconnected');
+        this.attemptReconnect();
+        reject(new Error('WebSocket connection closed'));
+      };
+
+      this.ws.onerror = (error) => {
+        console.error('WebSocket Error:', error);
+        reject(error);
+      };
+
+      this.ws.onmessage = (event) => {
+        try {
+          const message: WebSocketMessage = JSON.parse(event.data);
+          const handlers = this.eventHandlers[message.type] || [];
+          handlers.forEach(handler => handler(message.payload));
+        } catch (error) {
+          console.error('Error parsing message:', error);
+        }
+      };
+    });
   }
 
   private attemptReconnect() {

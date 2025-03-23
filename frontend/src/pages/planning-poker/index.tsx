@@ -40,48 +40,53 @@ const PlanningPoker: React.FC = () => {
   // WebSocket 연결 관리
   useEffect(() => {
     if (mode === 'multi' && channelId) {
-      // WebSocket 연결
-      websocketService.connect();
+      // WebSocket 연결 및 세션 참가
+      websocketService.connect()
+        .then(() => {
+          // WebSocket 이벤트 구독
+          websocketService.subscribe('VOTE', (vote: VoteMessage) => {
+            setVotes(prev => ({
+              ...prev,
+              [vote.userId]: {
+                userId: vote.userId,
+                point: vote.point,
+                timestamp: Date.now()
+              }
+            }));
+          });
 
-      // WebSocket 이벤트 구독
-      websocketService.subscribe('VOTE', (vote: VoteMessage) => {
-        setVotes(prev => ({
-          ...prev,
-          [vote.userId]: {
-            userId: vote.userId,
-            point: vote.point,
-            timestamp: Date.now()
-          }
-        }));
-      });
+          websocketService.subscribe('JOIN', (join: JoinMessage) => {
+            setParticipants(prev => [...prev, join.userId]);
+          });
 
-      websocketService.subscribe('JOIN', (join: JoinMessage) => {
-        setParticipants(prev => [...prev, join.userId]);
-      });
+          websocketService.subscribe('LEAVE', ({ userId }) => {
+            setParticipants(prev => prev.filter(id => id !== userId));
+            setVotes(prev => {
+              const newVotes = { ...prev };
+              delete newVotes[userId];
+              return newVotes;
+            });
+          });
 
-      websocketService.subscribe('LEAVE', ({ userId }) => {
-        setParticipants(prev => prev.filter(id => id !== userId));
-        setVotes(prev => {
-          const newVotes = { ...prev };
-          delete newVotes[userId];
-          return newVotes;
+          websocketService.subscribe('REVEAL', () => {
+            setIsRevealed(true);
+          });
+
+          websocketService.subscribe('STORY_UPDATE', (update: StoryUpdateMessage) => {
+            setStory(update.story);
+          });
+
+          // 세션 참가
+          websocketService.joinSession({
+            userId: currentUser.id,
+            userName: currentUser.name,
+            channelId
+          });
+        })
+        .catch((error) => {
+          console.error('Failed to connect to WebSocket:', error);
+          websocketService.disconnect();
         });
-      });
-
-      websocketService.subscribe('REVEAL', () => {
-        setIsRevealed(true);
-      });
-
-      websocketService.subscribe('STORY_UPDATE', (update: StoryUpdateMessage) => {
-        setStory(update.story);
-      });
-
-      // 세션 참가
-      websocketService.joinSession({
-        userId: currentUser.id,
-        userName: currentUser.name,
-        channelId
-      });
 
       // 컴포넌트 언마운트 시 정리
       return () => {
