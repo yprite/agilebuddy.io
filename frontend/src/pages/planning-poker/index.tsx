@@ -13,8 +13,11 @@ import {
   DialogActions,
   Button,
   TextField,
-  Alert
+  Alert,
+  IconButton,
+  Snackbar
 } from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import StoryInput from '../../components/planning-poker/StoryInput';
 import PointEstimation from '../../components/planning-poker/PointEstimation';
 import VoteResult from '../../components/planning-poker/VoteResult';
@@ -32,6 +35,7 @@ const PlanningPoker: React.FC = () => {
   const [channelDialogOpen, setChannelDialogOpen] = useState(false);
   const [channelId, setChannelId] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [showCopySnackbar, setShowCopySnackbar] = useState(false);
   const [currentUser] = useState({
     id: `user-${Math.random().toString(36).substr(2, 9)}`,
     name: 'User ' + Math.floor(Math.random() * 1000)
@@ -154,8 +158,26 @@ const PlanningPoker: React.FC = () => {
     }
   };
 
+  const generateChannelId = () => {
+    // 간단한 한글 단어 목록
+    const words = [
+      '사과', '바나나', '오렌지', '포도', '딸기',
+      '강아지', '고양이', '토끼', '사자', '호랑이',
+      '커피', '차', '우유', '주스', '물',
+      '책', '연필', '공책', '지우개', '가방',
+      '별', '달', '태양', '구름', '비',
+      '꽃', '나무', '풀', '바다', '산'
+    ];
+    
+    // 랜덤하게 두 개의 단어 선택
+    const word1 = words[Math.floor(Math.random() * words.length)];
+    const word2 = words[Math.floor(Math.random() * words.length)];
+    
+    return `${word1}${word2}`;
+  };
+
   const handleCreateChannel = () => {
-    const newChannelId = Math.random().toString(36).substr(2, 9);
+    const newChannelId = generateChannelId();
     setChannelId(newChannelId);
     setMode('multi');
     setChannelDialogOpen(false);
@@ -166,9 +188,23 @@ const PlanningPoker: React.FC = () => {
       setError('채널 ID를 입력해주세요');
       return;
     }
+    // 한글만 입력 가능하도록 검증
+    if (!/^[가-힣]+$/.test(channelId)) {
+      setError('한글만 입력 가능합니다');
+      return;
+    }
     setError(null);
     setMode('multi');
     setChannelDialogOpen(false);
+  };
+
+  const handleCopyChannelId = async () => {
+    try {
+      await navigator.clipboard.writeText(channelId);
+      setShowCopySnackbar(true);
+    } catch (err) {
+      console.error('Failed to copy channel ID:', err);
+    }
   };
 
   return (
@@ -195,7 +231,20 @@ const PlanningPoker: React.FC = () => {
         </Box>
 
         {mode === 'multi' && channelId && (
-          <Alert severity="info" sx={{ mb: 2 }}>
+          <Alert 
+            severity="info" 
+            sx={{ mb: 2 }}
+            action={
+              <IconButton
+                aria-label="copy channel ID"
+                color="inherit"
+                size="small"
+                onClick={handleCopyChannelId}
+              >
+                <ContentCopyIcon />
+              </IconButton>
+            }
+          >
             채널 ID: {channelId}
           </Alert>
         )}
@@ -267,6 +316,7 @@ const PlanningPoker: React.FC = () => {
               error={!!error}
               helperText={error}
               fullWidth
+              inputProps={{ maxLength: 4 }}
             />
           </Box>
         </DialogContent>
@@ -281,6 +331,13 @@ const PlanningPoker: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={showCopySnackbar}
+        autoHideDuration={2000}
+        onClose={() => setShowCopySnackbar(false)}
+        message="채널 ID가 복사되었습니다"
+      />
     </Container>
   );
 };
