@@ -1,42 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Box, Typography } from '@mui/material';
 import StoryInput from '../../components/planning-poker/StoryInput';
 import PointEstimation from '../../components/planning-poker/PointEstimation';
 import VoteResult from '../../components/planning-poker/VoteResult';
-import { VotingState, Vote } from '../../types/voting';
+import { VotingState, Vote, WebSocketMessage } from '../../types/voting';
+import { websocketService } from '../../services/websocket';
 
 const PlanningPoker: React.FC = () => {
   const [story, setStory] = useState<string>('');
   const [votingState, setVotingState] = useState<VotingState>({
     votes: {},
     isRevealed: false,
-    participants: ['참가자 1', '참가자 2', '참가자 3'],
-    currentUserId: '참가자 1'
+    participants: [],
+    currentUserId: `user_${Math.random().toString(36).substr(2, 9)}`
   });
 
-  const handleVote = (point: number) => {
-    setVotingState(prev => ({
-      ...prev,
-      votes: {
-        ...prev.votes,
-        [prev.currentUserId]: { 
-          userId: prev.currentUserId,
-          point,
-          timestamp: Date.now()
-        }
+  useEffect(() => {
+    // WebSocket 연결
+    websocketService.connect();
+
+    // 세션 참가
+    websocketService.joinSession({
+      userId: votingState.currentUserId,
+      userName: `참가자 ${votingState.currentUserId.slice(-4)}`
+    });
+
+    // 메시지 핸들러 등록
+    const unsubscribe = websocketService.subscribe((message: WebSocketMessage) => {
+      switch (message.type) {
+        case 'VOTE':
+          setVotingState(prev => ({
+            ...prev,
+            votes: {
+              ...prev.votes,
+              [message.payload.userId]: {
+                userId: message.payload.userId,
+                point: message.payload.point,
+                timestamp: Date.now()
+              }
+            }
+          }));
+          break;
+        case 'JOIN':
+          setVotingState(prev => ({
+            ...prev,
+            participants: [...prev.participants, message.payload.userId]
+          }));
+          break;
+        case 'LEAVE':
+          setVotingState(prev => ({
+            ...prev,
+            participants: prev.participants.filter(id => id !== message.payload.userId)
+          }));
+          break;
+        case 'REVEAL':
+          setVotingState(prev => ({
+            ...prev,
+            isRevealed: true
+          }));
+          break;
+        case 'STORY_UPDATE':
+          setStory(message.payload.story);
+          break;
       }
-    }));
+    });
+
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      unsubscribe();
+      websocketService.leaveSession(votingState.currentUserId);
+      websocketService.disconnect();
+    };
+  }, []);
+
+  const handleVote = (point: number) => {
+    websocketService.sendVote({
+      userId: votingState.currentUserId,
+      point
+    });
   };
 
   const handleReveal = () => {
-    setVotingState(prev => ({
-      ...prev,
-      isRevealed: true
-    }));
+    websocketService.revealVotes();
   };
 
-  const currentVote = votingState.votes[votingState.currentUserId];
-  const selectedPoint = currentVote?.point;
+  const handleStoryChange = (newStory: string) => {
+    setStory(newStory);
+    websocketService.updateStory(newStory);
+  };
 
   return (
     <Container maxWidth="md">
@@ -56,14 +107,14 @@ const PlanningPoker: React.FC = () => {
 
         <StoryInput 
           story={story}
-          onStoryChange={setStory}
+          onStoryChange={handleStoryChange}
         />
 
         <Box sx={{ my: 4 }}>
           <PointEstimation 
             onVote={handleVote}
-            hasVoted={!!currentVote}
-            selectedPoint={selectedPoint}
+            hasVoted={!!votingState.votes[votingState.currentUserId]}
+            selectedPoint={votingState.votes[votingState.currentUserId]?.point}
           />
         </Box>
 

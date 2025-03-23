@@ -9,4 +9,23 @@ export interface VotingState {
   isRevealed: boolean;
   participants: string[];
   currentUserId: string;
+}
+
+export interface WebSocketMessage {
+  type: 'VOTE' | 'JOIN' | 'LEAVE' | 'REVEAL' | 'STORY_UPDATE';
+  payload: any;
+}
+
+export interface VoteMessage {
+  userId: string;
+  point: number;
+}
+
+export interface JoinMessage {
+  userId: string;
+  userName: string;
+}
+
+export interface StoryUpdateMessage {
+  story: string;
 } 
