@@ -101,7 +101,9 @@ const PlanningPoker: React.FC = () => {
 
           websocketService.subscribe('STORY_UPDATE', (update: StoryUpdateMessage) => {
             console.log('Received story update:', update);
-            setStory(update.story);
+            if (update.story) {
+              setStory(update.story);
+            }
           });
 
           websocketService.subscribe('RESET', () => {
@@ -114,7 +116,7 @@ const PlanningPoker: React.FC = () => {
             console.log('Received channel state:', state);
             setParticipants(state.participants);
             setVotes(state.votes);
-            setStory(state.story);
+            setStory(state.story || '');
             setIsRevealed(state.isRevealed);
           });
 
