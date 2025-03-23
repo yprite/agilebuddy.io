@@ -56,7 +56,12 @@ const PlanningPoker: React.FC = () => {
           });
 
           websocketService.subscribe('JOIN', (join: JoinMessage) => {
-            setParticipants(prev => [...prev, join.userId]);
+            setParticipants(prev => {
+              if (!prev.includes(join.userId)) {
+                return [...prev, join.userId];
+              }
+              return prev;
+            });
           });
 
           websocketService.subscribe('LEAVE', ({ userId }) => {
@@ -97,6 +102,7 @@ const PlanningPoker: React.FC = () => {
       // 싱글 모드이거나 채널 ID가 없을 때는 WebSocket 연결 해제
       websocketService.disconnect();
       setParticipants([currentUser.id]);
+      setVotes({}); // 투표 상태 초기화
     }
   }, [currentUser, mode, channelId]);
 
