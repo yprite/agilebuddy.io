@@ -363,7 +363,6 @@ const PlanningPoker: React.FC = () => {
               error={!!error}
               helperText={error}
               fullWidth
-              inputProps={{ maxLength: 4 }}
             />
           </Box>
         </DialogContent>
