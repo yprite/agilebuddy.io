@@ -2,37 +2,63 @@ import { WebSocket } from 'ws';
 import { ConnectedClient, WebSocketMessage } from '../types';
 
 class ConnectionManager {
-  private clients: Map<string, ConnectedClient> = new Map();
+  private clients: Map<WebSocket, Omit<ConnectedClient, 'ws'>> = new Map();
 
-  addClient(ws: WebSocket, userId: string, userName: string) {
-    this.clients.set(userId, { ws, userId, userName });
+  addClient(ws: WebSocket, userId: string, userName: string, channelId: string) {
+    this.clients.set(ws, { userId, userName, channelId });
   }
 
-  removeClient(userId: string) {
-    this.clients.delete(userId);
+  removeClient(ws: WebSocket) {
+    this.clients.delete(ws);
   }
 
-  getClient(userId: string): ConnectedClient | undefined {
-    return this.clients.get(userId);
+  getClient(ws: WebSocket): (Omit<ConnectedClient, 'ws'> & { ws: WebSocket }) | undefined {
+    const client = this.clients.get(ws);
+    if (client) {
+      return { ...client, ws };
+    }
+    return undefined;
   }
 
-  getAllClients(): ConnectedClient[] {
-    return Array.from(this.clients.values());
+  getAllClients(): (Omit<ConnectedClient, 'ws'> & { ws: WebSocket })[] {
+    return Array.from(this.clients.entries()).map(([ws, client]) => ({
+      ...client,
+      ws
+    }));
   }
 
-  broadcast(message: WebSocketMessage, excludeUserId?: string) {
+  getClientsByChannel(channelId: string): WebSocket[] {
+    return Array.from(this.clients.entries())
+      .filter(([_, client]) => client.channelId === channelId)
+      .map(([ws]) => ws);
+  }
+
+  broadcastToChannel(channelId: string, message: WebSocketMessage) {
+    const channelClients = this.getClientsByChannel(channelId);
     const messageStr = JSON.stringify(message);
-    this.clients.forEach((client) => {
-      if (client.userId !== excludeUserId && client.ws.readyState === WebSocket.OPEN) {
-        client.ws.send(messageStr);
+
+    channelClients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(messageStr);
+      }
+    });
+  }
+
+  broadcast(message: WebSocketMessage) {
+    const messageStr = JSON.stringify(message);
+    this.clients.forEach((_, ws) => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(messageStr);
       }
     });
   }
 
   sendToUser(userId: string, message: WebSocketMessage) {
-    const client = this.clients.get(userId);
-    if (client && client.ws.readyState === WebSocket.OPEN) {
-      client.ws.send(JSON.stringify(message));
+    for (const [ws, client] of this.clients.entries()) {
+      if (client.userId === userId && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(message));
+        break;
+      }
     }
   }
 }

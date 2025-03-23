@@ -1,7 +1,7 @@
 import { WebSocket } from 'ws';
 
 export interface WebSocketMessage {
-  type: 'VOTE' | 'JOIN' | 'LEAVE' | 'REVEAL' | 'STORY_UPDATE';
+  type: 'VOTE' | 'JOIN' | 'LEAVE' | 'REVEAL' | 'STORY_UPDATE' | 'ERROR';
   payload: any;
 }
 
@@ -20,17 +20,32 @@ export interface StoryUpdateMessage {
   story: string;
 }
 
-export interface ConnectedClient {
-  ws: WebSocket;
+export interface Vote {
   userId: string;
-  userName: string;
-  channelId: string;
+  point: number;
+  timestamp: number;
+}
+
+export interface Channel {
+  id: string;
+  name: string;
+  participants: string[];
+  votes: { [key: string]: Vote };
+  story: string;
+  isRevealed: boolean;
+  createdAt: number;
 }
 
 export interface VotingSession {
-  votes: { [key: string]: VoteMessage };
-  isRevealed: boolean;
+  channelId: string;
   participants: string[];
+  votes: { [key: string]: Vote };
   story: string;
+  isRevealed: boolean;
+}
+
+export interface ConnectedClient {
+  userId: string;
+  userName: string;
   channelId: string;
 } 
