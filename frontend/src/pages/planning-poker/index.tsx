@@ -3,10 +3,17 @@ import { Container, Box, Typography, Paper } from '@mui/material';
 import StoryCard from '../../components/planning-poker/StoryCard';
 import PointSelector from '../../components/planning-poker/PointSelector';
 import VoteResult from '../../components/planning-poker/VoteResult';
+import StoryInput from '../../components/planning-poker/StoryInput';
+
+interface Story {
+  title: string;
+  description: string;
+}
 
 const PlanningPoker: React.FC = () => {
   const [votes, setVotes] = useState<{ [key: string]: number }>({});
   const [selectedPoint, setSelectedPoint] = useState<number>();
+  const [currentStory, setCurrentStory] = useState<Story | null>(null);
 
   const handlePointSelect = (point: number) => {
     setSelectedPoint(point);
@@ -14,6 +21,13 @@ const PlanningPoker: React.FC = () => {
       ...prev,
       '현재 사용자': point
     }));
+  };
+
+  const handleStorySubmit = (story: Story) => {
+    setCurrentStory(story);
+    // 새로운 스토리가 입력되면 투표 초기화
+    setVotes({});
+    setSelectedPoint(undefined);
   };
 
   const average = Object.values(votes).reduce((acc, curr) => acc + curr, 0) / Object.keys(votes).length || 0;
@@ -35,18 +49,38 @@ const PlanningPoker: React.FC = () => {
           </Typography>
         </Paper>
 
-        <StoryCard
-          title="샘플 스토리"
-          description="이것은 스토리 포인트 산정을 위한 샘플 스토리입니다."
-        />
-        <PointSelector
-          onSelect={handlePointSelect}
-          selectedPoint={selectedPoint}
-        />
-        <VoteResult
-          votes={votes}
-          average={average}
-        />
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <StoryInput onStorySubmit={handleStorySubmit} />
+        </Box>
+
+        {currentStory ? (
+          <>
+            <StoryCard
+              title={currentStory.title}
+              description={currentStory.description}
+            />
+            <PointSelector
+              onSelect={handlePointSelect}
+              selectedPoint={selectedPoint}
+            />
+            <VoteResult
+              votes={votes}
+              average={average}
+            />
+          </>
+        ) : (
+          <Paper 
+            sx={{ 
+              p: 4, 
+              textAlign: 'center',
+              background: 'linear-gradient(145deg, #ffffff 0%, #f5f5f5 100%)'
+            }}
+          >
+            <Typography variant="h6" color="text.secondary">
+              스토리를 입력해주세요
+            </Typography>
+          </Paper>
+        )}
       </Box>
     </Container>
   );
