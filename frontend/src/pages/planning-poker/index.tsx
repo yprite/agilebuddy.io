@@ -37,8 +37,12 @@ const PlanningPoker: React.FC = () => {
     name: 'User ' + Math.floor(Math.random() * 1000)
   });
 
+  // WebSocket 연결 관리
   useEffect(() => {
     if (mode === 'multi' && channelId) {
+      // WebSocket 연결
+      websocketService.connect();
+
       // WebSocket 이벤트 구독
       websocketService.subscribe('VOTE', (vote: VoteMessage) => {
         setVotes(prev => ({
@@ -85,14 +89,14 @@ const PlanningPoker: React.FC = () => {
         websocketService.disconnect();
       };
     } else {
-      // 싱글 모드일 때는 WebSocket 연결 해제
+      // 싱글 모드이거나 채널 ID가 없을 때는 WebSocket 연결 해제
       websocketService.disconnect();
       setParticipants([currentUser.id]);
     }
   }, [currentUser, mode, channelId]);
 
   const handleVote = (point: number) => {
-    if (mode === 'multi') {
+    if (mode === 'multi' && channelId) {
       websocketService.sendVote({
         userId: currentUser.id,
         point
@@ -110,7 +114,7 @@ const PlanningPoker: React.FC = () => {
   };
 
   const handleReveal = () => {
-    if (mode === 'multi') {
+    if (mode === 'multi' && channelId) {
       websocketService.revealResults();
     } else {
       setIsRevealed(true);
@@ -119,7 +123,7 @@ const PlanningPoker: React.FC = () => {
 
   const handleStoryChange = (newStory: string) => {
     setStory(newStory);
-    if (mode === 'multi') {
+    if (mode === 'multi' && channelId) {
       websocketService.updateStory({ story: newStory });
     }
   };

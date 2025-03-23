@@ -2,43 +2,45 @@ import { WebSocketMessage, VoteMessage, JoinMessage, StoryUpdateMessage } from '
 
 class WebSocketService {
   private ws: WebSocket | null = null;
+  private eventHandlers: { [key: string]: ((data: any) => void)[] } = {};
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
-  private reconnectTimeout = 3000;
+  private reconnectTimeout = 1000;
   private messageHandlers: { [key: string]: ((payload: any) => void)[] } = {};
 
-  constructor() {
-    this.connect();
-  }
+  public connect() {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      return;
+    }
 
-  private connect() {
     this.ws = new WebSocket('ws://localhost:3001');
 
     this.ws.onopen = () => {
-      console.log('WebSocket connected');
+      console.log('WebSocket Connected');
       this.reconnectAttempts = 0;
+    };
+
+    this.ws.onclose = () => {
+      console.log('WebSocket Disconnected');
+      this.attemptReconnect();
+    };
+
+    this.ws.onerror = (error) => {
+      console.error('WebSocket Error:', error);
     };
 
     this.ws.onmessage = (event) => {
       try {
         const message: WebSocketMessage = JSON.parse(event.data);
-        this.handleMessage(message);
+        const handlers = this.eventHandlers[message.type] || [];
+        handlers.forEach(handler => handler(message.payload));
       } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
+        console.error('Error parsing message:', error);
       }
-    };
-
-    this.ws.onclose = () => {
-      console.log('WebSocket disconnected');
-      this.handleReconnect();
-    };
-
-    this.ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
     };
   }
 
-  private handleReconnect() {
+  private attemptReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
@@ -46,11 +48,6 @@ class WebSocketService {
     } else {
       console.error('Max reconnection attempts reached');
     }
-  }
-
-  private handleMessage(message: WebSocketMessage) {
-    const handlers = this.messageHandlers[message.type] || [];
-    handlers.forEach(handler => handler(message.payload));
   }
 
   public subscribe(type: WebSocketMessage['type'], handler: (payload: any) => void) {
@@ -112,6 +109,8 @@ class WebSocketService {
     if (this.ws) {
       this.ws.close();
       this.ws = null;
+      this.eventHandlers = {};
+      this.reconnectAttempts = 0;
     }
   }
 }
