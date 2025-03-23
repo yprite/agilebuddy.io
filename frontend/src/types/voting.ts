@@ -24,6 +24,7 @@ export interface VoteMessage {
 export interface JoinMessage {
   userId: string;
   userName: string;
+  channelId: string;
 }
 
 export interface StoryUpdateMessage {

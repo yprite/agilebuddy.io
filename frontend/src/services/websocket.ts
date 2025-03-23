@@ -1,40 +1,30 @@
 import { WebSocketMessage, VoteMessage, JoinMessage, StoryUpdateMessage } from '../types/voting';
 
-type MessageHandler = (message: WebSocketMessage) => void;
-
 class WebSocketService {
   private ws: WebSocket | null = null;
-  private messageHandlers: MessageHandler[] = [];
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectTimeout = 3000;
+  private messageHandlers: { [key: string]: ((payload: any) => void)[] } = {};
 
-  constructor(private url: string) {}
-
-  connect() {
-    try {
-      this.ws = new WebSocket(this.url);
-      this.setupEventListeners();
-      this.reconnectAttempts = 0;
-    } catch (error) {
-      console.error('WebSocket connection failed:', error);
-      this.handleReconnect();
-    }
+  constructor() {
+    this.connect();
   }
 
-  private setupEventListeners() {
-    if (!this.ws) return;
+  private connect() {
+    this.ws = new WebSocket('ws://localhost:3001');
 
     this.ws.onopen = () => {
       console.log('WebSocket connected');
+      this.reconnectAttempts = 0;
     };
 
     this.ws.onmessage = (event) => {
       try {
         const message: WebSocketMessage = JSON.parse(event.data);
-        this.messageHandlers.forEach(handler => handler(message));
+        this.handleMessage(message);
       } catch (error) {
-        console.error('Failed to parse WebSocket message:', error);
+        console.error('Error parsing WebSocket message:', error);
       }
     };
 
@@ -58,45 +48,55 @@ class WebSocketService {
     }
   }
 
-  subscribe(handler: MessageHandler) {
-    this.messageHandlers.push(handler);
-    return () => {
-      this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
-    };
+  private handleMessage(message: WebSocketMessage) {
+    const handlers = this.messageHandlers[message.type] || [];
+    handlers.forEach(handler => handler(message.payload));
   }
 
-  sendVote(vote: VoteMessage) {
+  public subscribe(type: WebSocketMessage['type'], handler: (payload: any) => void) {
+    if (!this.messageHandlers[type]) {
+      this.messageHandlers[type] = [];
+    }
+    this.messageHandlers[type].push(handler);
+  }
+
+  public unsubscribe(type: WebSocketMessage['type'], handler: (payload: any) => void) {
+    if (!this.messageHandlers[type]) return;
+    this.messageHandlers[type] = this.messageHandlers[type].filter(h => h !== handler);
+  }
+
+  public sendVote(vote: VoteMessage) {
     this.send({
       type: 'VOTE',
       payload: vote
     });
   }
 
-  joinSession(join: JoinMessage) {
+  public joinSession(join: JoinMessage) {
     this.send({
       type: 'JOIN',
       payload: join
     });
   }
 
-  leaveSession(userId: string) {
+  public leaveSession(userId: string) {
     this.send({
       type: 'LEAVE',
       payload: { userId }
     });
   }
 
-  revealVotes() {
+  public revealResults() {
     this.send({
       type: 'REVEAL',
       payload: {}
     });
   }
 
-  updateStory(story: string) {
+  public updateStory(update: StoryUpdateMessage) {
     this.send({
       type: 'STORY_UPDATE',
-      payload: { story }
+      payload: update
     });
   }
 
@@ -108,7 +108,7 @@ class WebSocketService {
     }
   }
 
-  disconnect() {
+  public disconnect() {
     if (this.ws) {
       this.ws.close();
       this.ws = null;
@@ -116,4 +116,4 @@ class WebSocketService {
   }
 }
 
-export const websocketService = new WebSocketService('ws://localhost:3001'); 
+export const websocketService = new WebSocketService(); 
