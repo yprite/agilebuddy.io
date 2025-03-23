@@ -1,0 +1,22 @@
+{
+  "name": "agilebuddy",
+  "version": "1.0.0",
+  "description": "애자일 개발을 위한 유틸리티 웹 애플리케이션",
+  "scripts": {
+    "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
+    "start:frontend": "cd frontend && npm start",
+    "start:backend": "cd backend && npm start",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "keywords": [
+    "agile",
+    "scrum",
+    "planning-poker",
+    "task-management"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+} 
