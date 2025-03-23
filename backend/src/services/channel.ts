@@ -24,8 +24,7 @@ class ChannelService {
     return channelId;
   }
 
-  createChannel(userName: string): Channel {
-    const channelId = this.generateChannelId();
+  createChannel(userName: string, channelId: string): Channel {
     const channel: Channel = {
       id: channelId,
       name: `${userName}의 채널`,
@@ -106,6 +105,14 @@ class ChannelService {
       if (now - channel.createdAt > this.CHANNEL_EXPIRY_TIME) {
         this.channels.delete(channelId);
       }
+    }
+  }
+
+  resetChannel(channelId: string): void {
+    const channel = this.channels.get(channelId);
+    if (channel) {
+      channel.votes = {};
+      channel.isRevealed = false;
     }
   }
 }

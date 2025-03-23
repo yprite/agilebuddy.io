@@ -15,13 +15,7 @@ const PointEstimation: React.FC<PointEstimationProps> = ({ onVote, hasVoted, sel
   const [countdown, setCountdown] = useState<number>(0);
   const [canChangeVote, setCanChangeVote] = useState<boolean>(true);
 
-  useEffect(() => {
-    if (hasVoted && countdown === 0) {
-      setCountdown(COUNTDOWN_SECONDS);
-      setCanChangeVote(true);
-    }
-  }, [hasVoted]);
-
+  // 타이머 카운트다운
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (countdown > 0) {
@@ -40,8 +34,9 @@ const PointEstimation: React.FC<PointEstimationProps> = ({ onVote, hasVoted, sel
   }, [countdown]);
 
   const handleVote = (point: number) => {
+    console.log('PointEstimation handleVote called with point:', point);
     onVote(point);
-    // 카운트다운 리셋
+    // 투표할 때마다 타이머 시작
     setCountdown(COUNTDOWN_SECONDS);
     setCanChangeVote(true);
   };
@@ -73,7 +68,10 @@ const PointEstimation: React.FC<PointEstimationProps> = ({ onVote, hasVoted, sel
           <Grid item key={point}>
             <Button
               variant={selectedPoint === point ? "contained" : "outlined"}
-              onClick={() => handleVote(point)}
+              onClick={() => {
+                console.log('Button clicked with point:', point);
+                handleVote(point);
+              }}
               disabled={hasVoted && !canChangeVote}
               sx={{
                 minWidth: '80px',

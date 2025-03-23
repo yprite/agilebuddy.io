@@ -6,9 +6,10 @@ import { Vote, VotingState } from '../../types/voting';
 interface VoteResultProps {
   votingState: VotingState;
   onReveal: () => void;
+  onReset: () => void;
 }
 
-const VoteResult: React.FC<VoteResultProps> = ({ votingState, onReveal }) => {
+const VoteResult: React.FC<VoteResultProps> = ({ votingState, onReveal, onReset }) => {
   const { votes, isRevealed, participants, currentUserId } = votingState;
   
   const allVoted = participants.every(participant => votes[participant]);
@@ -33,16 +34,26 @@ const VoteResult: React.FC<VoteResultProps> = ({ votingState, onReveal }) => {
         >
           투표 결과
         </Typography>
-        {allVoted && !isRevealed && (
+        <Box>
+          {allVoted && !isRevealed && (
+            <Button
+              variant="contained"
+              startIcon={<Visibility />}
+              onClick={onReveal}
+              color="primary"
+              sx={{ mr: 1 }}
+            >
+              결과 공개
+            </Button>
+          )}
           <Button
-            variant="contained"
-            startIcon={<Visibility />}
-            onClick={onReveal}
+            variant="outlined"
+            onClick={onReset}
             color="primary"
           >
-            결과 공개
+            다시 투표
           </Button>
-        )}
+        </Box>
       </Box>
       
       <Grid container spacing={2}>
@@ -61,14 +72,14 @@ const VoteResult: React.FC<VoteResultProps> = ({ votingState, onReveal }) => {
                 {participant}
               </Typography>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                {isRevealed ? `${votes[participant]?.point || '-'}점` : '투표 완료'}
+                {votes[participant] ? `${votes[participant].point}점` : '투표 완료'}
               </Typography>
             </Paper>
           </Grid>
         ))}
       </Grid>
 
-      {isRevealed && (
+      {Object.keys(votes).length > 0 && (
         <>
           <Divider sx={{ my: 3 }} />
           <Box sx={{ textAlign: 'center' }}>

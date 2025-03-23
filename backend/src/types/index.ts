@@ -1,9 +1,9 @@
 import { WebSocket } from 'ws';
 
-export interface WebSocketMessage {
-  type: 'VOTE' | 'JOIN' | 'LEAVE' | 'REVEAL' | 'STORY_UPDATE' | 'ERROR';
+export type WebSocketMessage = {
+  type: 'VOTE' | 'JOIN' | 'LEAVE' | 'REVEAL' | 'STORY_UPDATE' | 'ERROR' | 'RESET';
   payload: any;
-}
+};
 
 export interface VoteMessage {
   userId: string;

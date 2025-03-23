@@ -19,6 +19,7 @@ import { Add as AddIcon, CloudDownload as CloudDownloadIcon } from '@mui/icons-m
 interface StoryInputProps {
   story: string;
   onStoryChange: (story: string) => void;
+  disabled?: boolean;
 }
 
 interface TabPanelProps {
@@ -47,7 +48,7 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-const StoryInput: React.FC<StoryInputProps> = ({ story, onStoryChange }) => {
+const StoryInput: React.FC<StoryInputProps> = ({ story, onStoryChange, disabled = false }) => {
   const [open, setOpen] = useState(false);
   const [tabValue, setTabValue] = useState(0);
   const [title, setTitle] = useState('');
@@ -93,6 +94,7 @@ const StoryInput: React.FC<StoryInputProps> = ({ story, onStoryChange }) => {
               setOpen(true);
             }}
             color="primary"
+            disabled={disabled}
             sx={{ 
               backgroundColor: 'primary.main',
               color: 'white',
@@ -111,6 +113,7 @@ const StoryInput: React.FC<StoryInputProps> = ({ story, onStoryChange }) => {
               setOpen(true);
             }}
             color="primary"
+            disabled={disabled}
             sx={{ 
               backgroundColor: 'primary.main',
               color: 'white',

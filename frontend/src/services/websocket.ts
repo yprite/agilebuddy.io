@@ -67,6 +67,16 @@ class WebSocketService {
     this.eventHandlers[type] = this.eventHandlers[type].filter(h => h !== handler);
   }
 
+  private send(message: WebSocketMessage) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      console.log('Sending WebSocket message:', message);
+      this.ws.send(JSON.stringify(message));
+      console.log('WebSocket message sent successfully');
+    } else {
+      console.error('WebSocket is not connected. Current state:', this.ws?.readyState);
+    }
+  }
+
   public sendVote(vote: VoteMessage) {
     this.send({
       type: 'VOTE',
@@ -102,20 +112,18 @@ class WebSocketService {
     });
   }
 
-  private send(message: WebSocketMessage) {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(message));
-    } else {
-      console.error('WebSocket is not connected');
-    }
-  }
-
   public disconnect() {
     if (this.ws) {
       this.ws.close();
       this.ws = null;
       this.eventHandlers = {};
       this.reconnectAttempts = 0;
+    }
+  }
+
+  sendMessage(message: WebSocketMessage): void {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify(message));
     }
   }
 }

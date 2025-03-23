@@ -12,7 +12,7 @@ export interface VotingState {
 }
 
 export interface WebSocketMessage {
-  type: 'VOTE' | 'JOIN' | 'LEAVE' | 'REVEAL' | 'STORY_UPDATE';
+  type: 'VOTE' | 'JOIN' | 'LEAVE' | 'REVEAL' | 'STORY_UPDATE' | 'RESET' | 'ERROR';
   payload: any;
 }
 
@@ -29,4 +29,12 @@ export interface JoinMessage {
 
 export interface StoryUpdateMessage {
   story: string;
+}
+
+export interface VotingSession {
+  channelId: string;
+  participants: string[];
+  votes: { [key: string]: Vote };
+  story: string;
+  isRevealed: boolean;
 } 

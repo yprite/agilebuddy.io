@@ -49,17 +49,29 @@ const PlanningPoker: React.FC = () => {
         .then(() => {
           // WebSocket 이벤트 구독
           websocketService.subscribe('VOTE', (vote: VoteMessage) => {
-            setVotes(prev => ({
-              ...prev,
-              [vote.userId]: {
-                userId: vote.userId,
-                point: vote.point,
-                timestamp: Date.now()
+            console.log('Received vote:', vote);
+            setVotes(prev => {
+              const newVotes = {
+                ...prev,
+                [vote.userId]: {
+                  userId: vote.userId,
+                  point: vote.point,
+                  timestamp: Date.now()
+                }
+              };
+              
+              // 모든 참가자가 투표했는지 확인
+              const allVoted = participants.every(participant => newVotes[participant]);
+              if (allVoted) {
+                setIsRevealed(true);
               }
-            }));
+              
+              return newVotes;
+            });
           });
 
           websocketService.subscribe('JOIN', (join: JoinMessage) => {
+            console.log('Received join:', join);
             setParticipants(prev => {
               if (!prev.includes(join.userId)) {
                 return [...prev, join.userId];
@@ -69,6 +81,7 @@ const PlanningPoker: React.FC = () => {
           });
 
           websocketService.subscribe('LEAVE', ({ userId }) => {
+            console.log('Received leave:', userId);
             setParticipants(prev => prev.filter(id => id !== userId));
             setVotes(prev => {
               const newVotes = { ...prev };
@@ -78,11 +91,23 @@ const PlanningPoker: React.FC = () => {
           });
 
           websocketService.subscribe('REVEAL', () => {
-            setIsRevealed(true);
+            console.log('Received reveal');
+            // 모든 참가자가 투표했는지 확인
+            const allVoted = participants.every(participant => votes[participant]);
+            if (allVoted) {
+              setIsRevealed(true);
+            }
           });
 
           websocketService.subscribe('STORY_UPDATE', (update: StoryUpdateMessage) => {
+            console.log('Received story update:', update);
             setStory(update.story);
+          });
+
+          websocketService.subscribe('RESET', () => {
+            console.log('Received reset');
+            setVotes({});
+            setIsRevealed(false);
           });
 
           // 세션 참가
@@ -111,20 +136,29 @@ const PlanningPoker: React.FC = () => {
   }, [currentUser, mode, channelId]);
 
   const handleVote = (point: number) => {
-    if (mode === 'multi' && channelId) {
-      websocketService.sendVote({
+    console.log('PlanningPoker handleVote called with point:', point);
+    setVotes(prev => ({
+      ...prev,
+      [currentUser.id]: {
         userId: currentUser.id,
-        point
-      });
-    } else {
-      setVotes(prev => ({
-        ...prev,
-        [currentUser.id]: {
+        point,
+        timestamp: Date.now()
+      }
+    }));
+
+    if (mode === 'multi' && channelId) {
+      // 5초 후에 투표 전송
+      setTimeout(() => {
+        websocketService.sendVote({
           userId: currentUser.id,
-          point,
-          timestamp: Date.now()
-        }
-      }));
+          point
+        });
+      }, 5000);
+    } else {
+      // 싱글 모드에서는 5초 후에 결과 표시
+      setTimeout(() => {
+        setIsRevealed(true);
+      }, 5000);
     }
   };
 
@@ -207,6 +241,17 @@ const PlanningPoker: React.FC = () => {
     }
   };
 
+  const handleReset = () => {
+    if (mode === 'multi' && channelId) {
+      websocketService.sendMessage({
+        type: 'RESET',
+        payload: {}
+      });
+    }
+    setVotes({});
+    setIsRevealed(false);
+  };
+
   return (
     <Container maxWidth="md">
       <Box sx={{ my: 4 }}>
@@ -249,38 +294,30 @@ const PlanningPoker: React.FC = () => {
           </Alert>
         )}
 
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <StoryInput
-              story={story}
-              onStoryChange={handleStoryChange}
-            />
-          </Grid>
+        <StoryInput
+          story={story}
+          onStoryChange={handleStoryChange}
+          disabled={isRevealed}
+        />
 
-          <Grid item xs={12}>
-            <Paper sx={{ p: 2 }}>
-              <PointEstimation
-                onVote={handleVote}
-                hasVoted={!!votes[currentUser.id]}
-                selectedPoint={votes[currentUser.id]?.point}
-              />
-            </Paper>
-          </Grid>
-
-          {Object.keys(votes).length > 0 && (
-            <Grid item xs={12}>
-              <VoteResult
-                votingState={{
-                  votes,
-                  isRevealed,
-                  participants,
-                  currentUserId: currentUser.id
-                }}
-                onReveal={handleReveal}
-              />
-            </Grid>
-          )}
-        </Grid>
+        {!isRevealed ? (
+          <PointEstimation
+            onVote={handleVote}
+            hasVoted={!!votes[currentUser.id]}
+            selectedPoint={votes[currentUser.id]?.point}
+          />
+        ) : (
+          <VoteResult
+            votingState={{
+              votes,
+              isRevealed,
+              participants,
+              currentUserId: currentUser.id
+            }}
+            onReveal={handleReveal}
+            onReset={handleReset}
+          />
+        )}
       </Box>
 
       <Dialog 
