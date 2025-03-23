@@ -11,10 +11,10 @@ export interface VotingState {
   currentUserId: string;
 }
 
-export interface WebSocketMessage {
-  type: 'VOTE' | 'JOIN' | 'LEAVE' | 'REVEAL' | 'STORY_UPDATE' | 'RESET' | 'ERROR';
+export type WebSocketMessage = {
+  type: 'VOTE' | 'JOIN' | 'LEAVE' | 'REVEAL' | 'STORY_UPDATE' | 'ERROR' | 'RESET' | 'CHANNEL_STATE';
   payload: any;
-}
+};
 
 export interface VoteMessage {
   userId: string;

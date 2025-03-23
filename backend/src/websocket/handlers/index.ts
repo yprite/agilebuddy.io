@@ -74,6 +74,18 @@ const handleJoin = (ws: WebSocket, join: JoinMessage) => {
 
   if (channelService.joinChannel(join.channelId, join)) {
     connectionManager.addClient(ws, join.userId, join.userName, join.channelId);
+    
+    // 새로 참가하는 클라이언트에게 현재 채널의 상태 전송
+    ws.send(JSON.stringify({
+      type: 'CHANNEL_STATE',
+      payload: {
+        participants: channel.participants,
+        votes: channel.votes,
+        story: channel.story,
+        isRevealed: channel.isRevealed
+      }
+    }));
+
     connectionManager.broadcastToChannel(join.channelId, {
       type: 'JOIN',
       payload: join

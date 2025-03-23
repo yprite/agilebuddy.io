@@ -110,6 +110,14 @@ const PlanningPoker: React.FC = () => {
             setIsRevealed(false);
           });
 
+          websocketService.subscribe('CHANNEL_STATE', (state: any) => {
+            console.log('Received channel state:', state);
+            setParticipants(state.participants);
+            setVotes(state.votes);
+            setStory(state.story);
+            setIsRevealed(state.isRevealed);
+          });
+
           // 세션 참가
           websocketService.joinSession({
             userId: currentUser.id,
