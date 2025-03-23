@@ -1,13 +1,13 @@
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 import { handleMessage } from './handlers';
 import { connectionManager } from './connection';
 
 const wss = new WebSocketServer({ port: 3001 });
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws: WebSocket) => {
   console.log('New client connected');
 
-  ws.on('message', (data) => {
+  ws.on('message', (data: Buffer) => {
     handleMessage(ws, data);
   });
 
