@@ -6,7 +6,6 @@ class WebSocketService {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectTimeout = 1000;
-  private messageHandlers: { [key: string]: ((payload: any) => void)[] } = {};
 
   public connect(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -57,15 +56,15 @@ class WebSocketService {
   }
 
   public subscribe(type: WebSocketMessage['type'], handler: (payload: any) => void) {
-    if (!this.messageHandlers[type]) {
-      this.messageHandlers[type] = [];
+    if (!this.eventHandlers[type]) {
+      this.eventHandlers[type] = [];
     }
-    this.messageHandlers[type].push(handler);
+    this.eventHandlers[type].push(handler);
   }
 
   public unsubscribe(type: WebSocketMessage['type'], handler: (payload: any) => void) {
-    if (!this.messageHandlers[type]) return;
-    this.messageHandlers[type] = this.messageHandlers[type].filter(h => h !== handler);
+    if (!this.eventHandlers[type]) return;
+    this.eventHandlers[type] = this.eventHandlers[type].filter(h => h !== handler);
   }
 
   public sendVote(vote: VoteMessage) {
