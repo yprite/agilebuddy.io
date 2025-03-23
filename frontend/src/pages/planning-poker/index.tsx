@@ -53,33 +53,23 @@ const PlanningPoker: React.FC = () => {
           <StoryInput onStorySubmit={handleStorySubmit} />
         </Box>
 
-        {currentStory ? (
-          <>
-            <StoryCard
-              title={currentStory.title}
-              description={currentStory.description}
-            />
-            <PointSelector
-              onSelect={handlePointSelect}
-              selectedPoint={selectedPoint}
-            />
-            <VoteResult
-              votes={votes}
-              average={average}
-            />
-          </>
-        ) : (
-          <Paper 
-            sx={{ 
-              p: 4, 
-              textAlign: 'center',
-              background: 'linear-gradient(145deg, #ffffff 0%, #f5f5f5 100%)'
-            }}
-          >
-            <Typography variant="h6" color="text.secondary">
-              스토리를 입력해주세요
-            </Typography>
-          </Paper>
+        {currentStory && (
+          <StoryCard
+            title={currentStory.title}
+            description={currentStory.description}
+          />
+        )}
+
+        <PointSelector
+          onSelect={handlePointSelect}
+          selectedPoint={selectedPoint}
+        />
+
+        {Object.keys(votes).length > 0 && (
+          <VoteResult
+            votes={votes}
+            average={average}
+          />
         )}
       </Box>
     </Container>
