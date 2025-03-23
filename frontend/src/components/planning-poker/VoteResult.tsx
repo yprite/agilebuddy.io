@@ -72,7 +72,7 @@ const VoteResult: React.FC<VoteResultProps> = ({ votingState, onReveal, onReset 
                 {participant}
               </Typography>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                {votes[participant] ? `${votes[participant].point}점` : '투표 완료'}
+                {votes[participant] ? `${votes[participant].point}점` : '미응답'}
               </Typography>
             </Paper>
           </Grid>
