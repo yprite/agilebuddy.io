@@ -1,15 +1,17 @@
 import express from 'express';
 import cors from 'cors';
 import { storyRouter } from './routes/story';
+import clickupRouter from '../routes/clickup';
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
 
 // 라우터 등록
 app.use('/api/stories', storyRouter);
+app.use('/api/clickup', clickupRouter);
 
 // 기본 라우트
 app.get('/', (req, res) => {
@@ -23,5 +25,5 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 app.listen(port, () => {
-  console.log(`API Server running on port ${port}`);
+  console.log(`API server is running on port ${port}`);
 }); 
