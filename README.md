@@ -10,6 +10,20 @@
   - 기본 기능 : 실시간 투표 기능
 - 추가 기능 아이디어: 과거의 추정 데이터 비교, AI 기반 추천 포인트 제공.
 
+### Clickup API 설정
+1. Clickup API 토큰 발급
+   - Clickup 계정에 로그인
+   - 우측 상단의 프로필 아이콘 클릭
+   - Settings > Apps > API Token 메뉴로 이동
+   - "Generate" 버튼을 클릭하여 API 토큰 생성
+   - 생성된 토큰을 안전한 곳에 저장
+
+2. 환경 변수 설정
+   - backend/.env 파일 생성
+   ```
+   CLICKUP_API_TOKEN=your_api_token_here
+   ```
+
 ### 실행 방법
 1. 백엔드 실행
 ```bash
