@@ -12,7 +12,8 @@ export type WebSocketMessageType =
   | 'FETCH_TASK'
   | 'SPRINT_TASKS'
   | 'TASK_DETAILS'
-  | 'PING';
+  | 'PING'
+  | 'YPRITE';
 
 export interface WebSocketMessage {
   type: WebSocketMessageType;

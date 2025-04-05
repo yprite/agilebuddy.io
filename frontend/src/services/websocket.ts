@@ -119,6 +119,7 @@ class WebSocketService {
       this.ws.send(JSON.stringify(message));
     }
   }
+  
 }
 
 export const websocketService = new WebSocketService(); 

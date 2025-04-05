@@ -1,7 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { handleMessage } from './handlers';
 import { connectionManager } from './connection';
-import { ConnectedClient } from '../types';
 
 interface ExtendedWebSocket extends WebSocket {
   isAlive: boolean;
@@ -20,7 +19,6 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
   // 연결 유지를 위한 ping/pong 설정
   ws.isAlive = true;
   ws.on('pong', () => {
-    console.log('Received pong');
     ws.isAlive = true;
   });
 

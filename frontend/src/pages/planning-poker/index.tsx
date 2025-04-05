@@ -133,15 +133,6 @@ const PlanningPoker: React.FC = () => {
             userName: currentUser.name,
             channelId
           });
-
-          websocketService.subscribe('PING', () => {
-            console.log('Received ping');
-            websocketService.send({
-              type: 'PING',
-              payload: {"pong": "pong"}
-            });
-          });
-
         })
         .catch((error) => {
           console.error('Failed to connect to WebSocket:', error);
