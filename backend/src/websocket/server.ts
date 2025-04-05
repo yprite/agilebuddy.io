@@ -53,6 +53,7 @@ const interval = setInterval(() => {
       return extendedWs.terminate();
     }
     extendedWs.isAlive = false;
+    extendedWs.ping();
   });
 }, 30000);
 
