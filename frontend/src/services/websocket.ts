@@ -1,4 +1,5 @@
 import { WebSocketMessage, VoteMessage, JoinMessage, StoryUpdateMessage } from '../types/voting';
+import { WebSocketMessageType } from '../types/websocket';
 
 class WebSocketService {
   private ws: WebSocket | null = null;
@@ -86,7 +87,7 @@ class WebSocketService {
     this.eventHandlers[type] = this.eventHandlers[type].filter(h => h !== handler);
   }
 
-  private send(message: WebSocketMessage) {
+  public send(message: WebSocketMessage) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       console.log('Sending WebSocket message:', message);
       this.ws.send(JSON.stringify(message));
