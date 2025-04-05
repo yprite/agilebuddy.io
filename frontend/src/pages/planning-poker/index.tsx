@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Box, 
-  Typography, 
-  Paper, 
-  Grid, 
-  ToggleButtonGroup, 
+import {
+  Container,
+  Box,
+  Typography,
+  Paper,
+  Grid,
+  ToggleButtonGroup,
   ToggleButton,
   Dialog,
   DialogTitle,
@@ -22,7 +22,12 @@ import StoryInput from '../../components/planning-poker/StoryInput';
 import PointEstimation from '../../components/planning-poker/PointEstimation';
 import VoteResult from '../../components/planning-poker/VoteResult';
 import { websocketService } from '../../services/websocket';
-import { VoteMessage, JoinMessage, StoryUpdateMessage, Vote } from '../../types/voting';
+import { VoteMessage } from '../../types/voting';
+import { JoinMessage } from '../../types/channel';
+import { StoryUpdateMessage } from '../../types/clickup';
+import TaskList from '../../components/planning-poker/TaskList';
+import { ClickupTask } from '../../types/clickup';
+import { Vote } from 'types/voting';
 
 type VotingMode = 'single' | 'multi';
 
@@ -40,6 +45,8 @@ const PlanningPoker: React.FC = () => {
     id: `user-${Math.random().toString(36).substr(2, 9)}`,
     name: 'User ' + Math.floor(Math.random() * 1000)
   });
+  const [selectedTask, setSelectedTask] = useState<ClickupTask | null>(null);
+  const [listId, setListId] = useState<string>('');
 
   // WebSocket 연결 관리
   useEffect(() => {
@@ -59,13 +66,13 @@ const PlanningPoker: React.FC = () => {
                   timestamp: Date.now()
                 }
               };
-              
+
               // 모든 참가자가 투표했는지 확인
               const allVoted = participants.every(participant => newVotes[participant]);
               if (allVoted) {
                 setIsRevealed(true);
               }
-              
+
               return newVotes;
             });
           });
@@ -126,6 +133,15 @@ const PlanningPoker: React.FC = () => {
             userName: currentUser.name,
             channelId
           });
+
+          websocketService.subscribe('PING', () => {
+            console.log('Received ping');
+            websocketService.send({
+              type: 'PING',
+              payload: {"pong": "pong"}
+            });
+          });
+
         })
         .catch((error) => {
           console.error('Failed to connect to WebSocket:', error);
@@ -212,11 +228,11 @@ const PlanningPoker: React.FC = () => {
       '별', '달', '태양', '구름', '비',
       '꽃', '나무', '풀', '바다', '산'
     ];
-    
+
     // 랜덤하게 두 개의 단어 선택
     const word1 = words[Math.floor(Math.random() * words.length)];
     const word2 = words[Math.floor(Math.random() * words.length)];
-    
+
     return `${word1}${word2}`;
   };
 
@@ -262,76 +278,90 @@ const PlanningPoker: React.FC = () => {
     setIsRevealed(false);
   };
 
+  const handleTaskSelect = (task: ClickupTask) => {
+    setSelectedTask(task);
+    setStory(task.description);
+  };
+
   return (
-    <Container maxWidth="md">
-      <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom align="center">
-          Planning Poker
-        </Typography>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={4}>
+          <TaskList
+            onTaskSelect={handleTaskSelect}
+          />
+        </Grid>
+        <Grid item xs={12} md={8}>
+          <Box sx={{ my: 4 }}>
+            <Typography variant="h4" component="h1" gutterBottom align="center">
+              Planning Poker
+            </Typography>
 
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-          <ToggleButtonGroup
-            value={mode}
-            exclusive
-            onChange={handleModeChange}
-            aria-label="voting mode"
-          >
-            <ToggleButton value="single" aria-label="single mode">
-              싱글 모드
-            </ToggleButton>
-            <ToggleButton value="multi" aria-label="multi mode">
-              멀티 모드
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
-
-        {mode === 'multi' && channelId && (
-          <Alert 
-            severity="info" 
-            sx={{ mb: 2 }}
-            action={
-              <IconButton
-                aria-label="copy channel ID"
-                color="inherit"
-                size="small"
-                onClick={handleCopyChannelId}
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+              <ToggleButtonGroup
+                value={mode}
+                exclusive
+                onChange={handleModeChange}
+                aria-label="voting mode"
               >
-                <ContentCopyIcon />
-              </IconButton>
-            }
-          >
-            채널 ID: {channelId}
-          </Alert>
-        )}
+                <ToggleButton value="single" aria-label="single mode">
+                  싱글 모드
+                </ToggleButton>
+                <ToggleButton value="multi" aria-label="multi mode">
+                  멀티 모드
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
 
-        <StoryInput
-          story={story}
-          onStoryChange={handleStoryChange}
-          disabled={isRevealed}
-        />
+            {mode === 'multi' && channelId && (
+              <Alert
+                severity="info"
+                sx={{ mb: 2 }}
+                action={
+                  <IconButton
+                    aria-label="copy channel ID"
+                    color="inherit"
+                    size="small"
+                    onClick={handleCopyChannelId}
+                  >
+                    <ContentCopyIcon />
+                  </IconButton>
+                }
+              >
+                채널 ID: {channelId}
+              </Alert>
+            )}
 
-        {!isRevealed ? (
-          <PointEstimation
-            onVote={handleVote}
-            hasVoted={!!votes[currentUser.id]}
-            selectedPoint={votes[currentUser.id]?.point}
-          />
-        ) : (
-          <VoteResult
-            votingState={{
-              votes,
-              isRevealed,
-              participants,
-              currentUserId: currentUser.id
-            }}
-            onReveal={handleReveal}
-            onReset={handleReset}
-          />
-        )}
-      </Box>
+            <StoryInput
+              story={story}
+              onStoryChange={handleStoryChange}
+              disabled={isRevealed}
+            />
 
-      <Dialog 
-        open={channelDialogOpen} 
+            {!isRevealed ? (
+              <PointEstimation
+                onVote={handleVote}
+                hasVoted={!!votes[currentUser.id]}
+                selectedPoint={votes[currentUser.id]?.point}
+              />
+            ) : (
+              <VoteResult
+                votingState={{
+                  votes,
+                  isRevealed,
+                  participants,
+                  currentUserId: currentUser.id
+                }}
+                onReveal={handleReveal}
+                onReset={handleReset}
+              />
+            )}
+          </Box>
+        </Grid>
+      </Grid>
+
+      <Dialog
+        open={channelDialogOpen}
         onClose={() => setChannelDialogOpen(false)}
         maxWidth="sm"
         fullWidth
@@ -351,7 +381,7 @@ const PlanningPoker: React.FC = () => {
             >
               새 채널 만들기
             </Button>
-            
+
             <Typography variant="subtitle1" sx={{ textAlign: 'center' }}>
               또는
             </Typography>
@@ -368,8 +398,8 @@ const PlanningPoker: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setChannelDialogOpen(false)}>취소</Button>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             onClick={handleJoinChannel}
             disabled={!channelId.trim()}
           >

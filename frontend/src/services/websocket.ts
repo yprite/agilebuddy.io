@@ -1,5 +1,7 @@
-import { WebSocketMessage, VoteMessage, JoinMessage, StoryUpdateMessage } from '../types/voting';
-import { WebSocketMessageType } from '../types/websocket';
+import { VoteMessage } from '../types/voting';
+import { WebSocketMessage } from '../types/websocket';
+import { JoinMessage } from '../types/channel';
+import { StoryUpdateMessage } from '../types/clickup';
 
 class WebSocketService {
   private ws: WebSocket | null = null;

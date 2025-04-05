@@ -20,6 +20,7 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
   // 연결 유지를 위한 ping/pong 설정
   ws.isAlive = true;
   ws.on('pong', () => {
+    console.log('Received pong');
     ws.isAlive = true;
   });
 
@@ -55,7 +56,7 @@ const interval = setInterval(() => {
     extendedWs.isAlive = false;
     extendedWs.ping();
   });
-}, 30000);
+}, 1000);
 
 wss.on('close', () => {
   clearInterval(interval);

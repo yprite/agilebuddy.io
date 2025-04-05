@@ -2,6 +2,7 @@ import { WebSocket } from 'ws';
 import { connectionManager } from '../connection';
 import { VoteMessage, JoinMessage, StoryUpdateMessage, WebSocketMessage } from '../../types';
 import { channelService } from '../../services/channel';
+import { clickupService } from '../../services/clickup';
 
 export const handleMessage = (ws: WebSocket, data: Buffer) => {
   try {
@@ -25,6 +26,12 @@ export const handleMessage = (ws: WebSocket, data: Buffer) => {
         break;
       case 'RESET':
         handleReset(ws);
+        break;
+      case 'FETCH_SPRINT_TASKS':
+        handleFetchSprintTasks(ws, message.payload as { folderId: string });
+        break;
+      case 'FETCH_TASK':
+        handleFetchTask(ws, message.payload as { taskId: string });
         break;
       default:
         console.warn('Unknown message type:', message.type);
@@ -136,4 +143,48 @@ const handleReset = (ws: WebSocket) => {
     type: 'RESET',
     payload: {}
   });
-}; 
+};
+
+const handleFetchSprintTasks = async (ws: WebSocket, payload: { folderId: string }) => {
+  try {
+    const tasks = await clickupService.getSprintTasks(payload.folderId);
+    const client = connectionManager.getClient(ws);
+    if (client) {
+      connectionManager.sendToUser(client.userId, {
+        type: 'SPRINT_TASKS',
+        payload: tasks
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching sprint tasks:', error);
+    const client = connectionManager.getClient(ws);
+    if (client) {
+      connectionManager.sendToUser(client.userId, {
+        type: 'ERROR',
+        payload: { message: 'Failed to fetch sprint tasks' }
+      });
+    }
+  }
+};
+
+const handleFetchTask = async (ws: WebSocket, payload: { taskId: string }) => {
+  try {
+    const task = await clickupService.getTask(payload.taskId);
+    const client = connectionManager.getClient(ws);
+    if (client) {
+      connectionManager.sendToUser(client.userId, {
+        type: 'TASK_DETAILS',
+        payload: task
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching task:', error);
+    const client = connectionManager.getClient(ws);
+    if (client) {
+      connectionManager.sendToUser(client.userId, {
+        type: 'ERROR',
+        payload: { message: 'Failed to fetch task details' }
+      });
+    }
+  }
+};
