@@ -63,13 +63,12 @@ class ClickupService {
         `${this.baseUrl}/task/${taskId}`,
         { headers: this.getHeaders() }
       );
-      console.log('Task response:', response.data);
       return response.data;
     } catch (error: any) {
-      console.error('Error fetching task from Clickup:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-      }
+      // console.error('Error fetching task from Clickup:', error);
+      // if (error.response) {
+      //   console.error('Error response:', error.response.data);
+      // }
       throw error;
     }
   }

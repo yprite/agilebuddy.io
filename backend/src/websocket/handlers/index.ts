@@ -178,7 +178,7 @@ const handleFetchTask = async (ws: WebSocket, payload: { taskId: string }) => {
       });
     }
   } catch (error) {
-    console.error('Error fetching task:', error);
+    // console.error('Error fetching task:', error);
     const client = connectionManager.getClient(ws);
     if (client) {
       connectionManager.sendToUser(client.userId, {

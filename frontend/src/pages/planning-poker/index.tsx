@@ -277,11 +277,11 @@ const PlanningPoker: React.FC = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
+        {/* <Grid item xs={12} md={4}>
           <TaskList
             onTaskSelect={handleTaskSelect}
           />
-        </Grid>
+        </Grid> */}
         <Grid item xs={12} md={8}>
           <Box sx={{ my: 4 }}>
             <Typography variant="h4" component="h1" gutterBottom align="center">
@@ -323,11 +323,11 @@ const PlanningPoker: React.FC = () => {
               </Alert>
             )}
 
-            <StoryInput
+            {/* <StoryInput
               story={story}
               onStoryChange={handleStoryChange}
               disabled={isRevealed}
-            />
+            /> */}
 
             {!isRevealed ? (
               <PointEstimation

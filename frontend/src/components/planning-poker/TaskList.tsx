@@ -52,6 +52,30 @@ const TaskList: React.FC<TaskListProps> = ({ onTaskSelect }) => {
     }
   };
 
+  const fetchTask = async () => {
+    if (!folderId.trim()) {
+      setError('Sprint 폴더 ID를 입력해주세요');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Fetching tasks for folder:', folderId);
+      const response = await clickupService.getTask(folderId);
+      console.log('Response:', response);
+      if (!response ) {
+        throw new Error('Task를 가져오는데 실패했습니다.');
+      }
+      
+    } catch (err) {
+      console.error('Error details:', err);
+      setError(err instanceof Error ? err.message : 'Task 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
       <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
@@ -70,7 +94,7 @@ const TaskList: React.FC<TaskListProps> = ({ onTaskSelect }) => {
         />
         <Button
           variant="contained"
-          onClick={fetchSprintTasks}
+          onClick={fetchTask}
           disabled={loading}
           sx={{ minWidth: '100px' }}
         >
