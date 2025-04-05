@@ -21,14 +21,11 @@ class WebSocketService {
       this.ws.onopen = () => {
         console.log('WebSocket Connected');
         this.reconnectAttempts = 0;
-        this.startPingInterval();
         resolve();
       };
 
       this.ws.onclose = () => {
         console.log('WebSocket Disconnected');
-        this.stopPingInterval();
-        this.attemptReconnect();
         reject(new Error('WebSocket connection closed'));
       };
 
@@ -47,32 +44,6 @@ class WebSocketService {
         }
       };
     });
-  }
-
-  private startPingInterval() {
-    this.stopPingInterval();
-    this.pingInterval = setInterval(() => {
-      if (this.ws?.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({ type: 'PING' }));
-      }
-    }, 15000); // 15초마다 ping
-  }
-
-  private stopPingInterval() {
-    if (this.pingInterval) {
-      clearInterval(this.pingInterval);
-      this.pingInterval = null;
-    }
-  }
-
-  private attemptReconnect() {
-    if (this.reconnectAttempts < this.maxReconnectAttempts) {
-      this.reconnectAttempts++;
-      console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
-      setTimeout(() => this.connect(), this.reconnectTimeout * Math.pow(2, this.reconnectAttempts - 1));
-    } else {
-      console.error('Max reconnection attempts reached');
-    }
   }
 
   public subscribe(type: WebSocketMessage['type'], handler: (payload: any) => void) {
@@ -133,7 +104,6 @@ class WebSocketService {
   }
 
   public disconnect() {
-    this.stopPingInterval();
     if (this.ws) {
       this.ws.close();
       this.ws = null;
