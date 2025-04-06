@@ -59,6 +59,7 @@ jobs:
         # 도커 컨테이너 실행
         ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} '
           cd ~/agilebuddy
+          docker-compose down
           docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
           docker-compose pull
           docker-compose up -d
