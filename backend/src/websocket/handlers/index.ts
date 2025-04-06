@@ -44,7 +44,6 @@ export const handleMessage = (ws: WebSocket, data: Buffer) => {
 const handleVote = (ws: WebSocket, vote: VoteMessage) => {
   console.log('handleVote called with:', vote);
   const client = connectionManager.getClient(ws);
-  console.log('Found client:', client);
   
   if (!client) {
     console.log('No client found for WebSocket');

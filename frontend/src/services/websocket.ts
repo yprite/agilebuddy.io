@@ -18,7 +18,7 @@ class WebSocketService {
         return;
       }
 
-      this.ws = new WebSocket('ws://localhost:3001');
+      this.ws = new WebSocket('ws://3.36.132.159:3001');
 
       this.ws.onopen = () => {
         console.log('WebSocket Connected');
