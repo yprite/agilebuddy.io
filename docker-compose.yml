@@ -1,21 +1,13 @@
 version: '3'
 services:
   frontend:
-    image: your-dockerhub-username/agilebuddy-frontend:latest
+    image: yprite/agilebuddy-frontend:latest
     ports:
-      - "100080:80"
+      - "10080:80"
     restart: always
-    networks:
-      - agilebuddy-network
 
   backend:
-    image: your-dockerhub-username/agilebuddy-backend:latest
+    image: yprite/agilebuddy-backend:latest
     ports:
-      - "100090:3001"
+      - "10090:3001"
     restart: always
-    networks:
-      - agilebuddy-network
-
-networks:
-  agilebuddy-network:
-    driver: bridge 
