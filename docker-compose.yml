@@ -2,12 +2,14 @@ version: '3'
 services:
   frontend:
     image: yprite/agilebuddy-frontend:latest
+    # platform: linux/amd64
     ports:
-      - "10080:80"
+      - "10180:80"
     restart: always
 
   backend:
     image: yprite/agilebuddy-backend:latest
+    # platform: linux/amd64
     ports:
-      - "10090:3001"
+      - "10190:3001"
     restart: always
