@@ -179,6 +179,26 @@ class WebSocketService {
     }
   }
 
+  public async reconnect() {
+    console.log('Manual reconnection requested');
+    this.disconnect();
+    try {
+      await this.connect();
+      const savedSession = this.restoreSessionInfo();
+      if (savedSession) {
+        console.log('Restoring session after manual reconnect:', savedSession);
+        this.send({
+          type: 'REQUEST_CHANNEL_STATE',
+          payload: { channelId: savedSession.channelId }
+        });
+      }
+      return true;
+    } catch (error) {
+      console.error('Manual reconnection failed:', error);
+      return false;
+    }
+  }
+
   sendMessage(message: WebSocketMessage): void {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));

@@ -14,7 +14,9 @@ import {
   TextField,
   Alert,
   IconButton,
-  Snackbar
+  Snackbar,
+  CircularProgress,
+  Tooltip
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PointEstimation from '../../components/planning-poker/PointEstimation';
@@ -25,6 +27,7 @@ import { JoinMessage } from '../../types/channel';
 import { StoryUpdateMessage } from '../../types/clickup';
 import { ClickupTask } from '../../types/clickup';
 import { Vote } from 'types/voting';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 type VotingMode = 'single' | 'multi';
 
@@ -44,6 +47,7 @@ const PlanningPoker: React.FC = () => {
   });
   const [selectedTask, setSelectedTask] = useState<ClickupTask | null>(null);
   const [listId, setListId] = useState<string>('');
+  const [isReconnecting, setIsReconnecting] = useState(false);
 
   // WebSocket 연결 관리
   useEffect(() => {
@@ -294,6 +298,20 @@ const PlanningPoker: React.FC = () => {
     setStory(task.description);
   };
 
+  const handleReconnect = async () => {
+    setIsReconnecting(true);
+    try {
+      const success = await websocketService.reconnect();
+      if (success) {
+        console.log('Successfully reconnected');
+      } else {
+        console.error('Failed to reconnect');
+      }
+    } finally {
+      setIsReconnecting(false);
+    }
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Grid container spacing={3}>
@@ -304,9 +322,28 @@ const PlanningPoker: React.FC = () => {
         </Grid> */}
         <Grid item xs={12} md={8}>
           <Box sx={{ my: 4 }}>
-            <Typography variant="h4" component="h1" gutterBottom align="center">
-              Planning Poker
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h4" component="h1">
+                Planning Poker
+              </Typography>
+              {mode === 'multi' && (
+                <Tooltip title="연결 재설정">
+                  <IconButton 
+                    onClick={handleReconnect} 
+                    disabled={isReconnecting}
+                    color="primary"
+                  >
+                    <RefreshIcon sx={{ 
+                      animation: isReconnecting ? 'spin 1s linear infinite' : 'none',
+                      '@keyframes spin': {
+                        '0%': { transform: 'rotate(0deg)' },
+                        '100%': { transform: 'rotate(360deg)' }
+                      }
+                    }} />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
               <ToggleButtonGroup
