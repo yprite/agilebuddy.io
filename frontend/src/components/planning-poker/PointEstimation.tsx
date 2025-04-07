@@ -8,7 +8,7 @@ interface PointEstimationProps {
   selectedPoint?: number;
 }
 
-const points = [0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100];
+const points = [0, 0.5, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
 const COUNTDOWN_SECONDS = 5;
 
 const PointEstimation: React.FC<PointEstimationProps> = ({ onVote, hasVoted, selectedPoint }) => {
