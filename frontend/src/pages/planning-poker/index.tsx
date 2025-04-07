@@ -3,7 +3,6 @@ import {
   Container,
   Box,
   Typography,
-  Paper,
   Grid,
   ToggleButtonGroup,
   ToggleButton,
@@ -18,14 +17,12 @@ import {
   Snackbar
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import StoryInput from '../../components/planning-poker/StoryInput';
 import PointEstimation from '../../components/planning-poker/PointEstimation';
 import VoteResult from '../../components/planning-poker/VoteResult';
 import { websocketService } from '../../services/websocket';
 import { VoteMessage } from '../../types/voting';
 import { JoinMessage } from '../../types/channel';
 import { StoryUpdateMessage } from '../../types/clickup';
-import TaskList from '../../components/planning-poker/TaskList';
 import { ClickupTask } from '../../types/clickup';
 import { Vote } from 'types/voting';
 
@@ -151,6 +148,29 @@ const PlanningPoker: React.FC = () => {
       setVotes({}); // 투표 상태 초기화
     }
   }, [currentUser, mode, channelId]);
+
+  // 페이지 가시성 변경 감지
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && mode === 'multi' && channelId) {
+        // 페이지가 다시 보일 때 상태 새로고침
+        websocketService.connect()
+          .then(() => {
+            // 채널 상태 요청
+            websocketService.send({
+              type: 'REQUEST_CHANNEL_STATE',
+              payload: { channelId }
+            });
+          })
+          .catch(console.error);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [mode, channelId]);
 
   const handleVote = (point: number) => {
     console.log('PlanningPoker handleVote called with point:', point);

@@ -1,4 +1,3 @@
-
 export type WebSocketMessageType =
   | 'VOTE'
   | 'JOIN'
@@ -8,6 +7,7 @@ export type WebSocketMessageType =
   | 'ERROR'
   | 'RESET'
   | 'CHANNEL_STATE'
+  | 'REQUEST_CHANNEL_STATE'
   | 'FETCH_SPRINT_TASKS'
   | 'FETCH_TASK'
   | 'SPRINT_TASKS'
