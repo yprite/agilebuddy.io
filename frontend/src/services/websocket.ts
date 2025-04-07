@@ -27,30 +27,38 @@ class WebSocketService {
       userName,
       timestamp: Date.now()
     }));
+    console.log('Session info saved:', { channelId, userId, userName });
   }
 
   // 세션 정보 복구
   private restoreSessionInfo(): { channelId: string; userId: string; userName: string } | null {
     const savedSession = localStorage.getItem('wsSession');
-    if (!savedSession) return null;
+    if (!savedSession) {
+      console.log('No saved session found');
+      return null;
+    }
 
     const session = JSON.parse(savedSession);
     // 1시간이 지난 세션은 무효화
     if (Date.now() - session.timestamp > 60 * 60 * 1000) {
+      console.log('Session expired');
       localStorage.removeItem('wsSession');
       return null;
     }
 
+    console.log('Session restored:', session);
     return session;
   }
 
   public connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.ws?.readyState === WebSocket.OPEN) {
+        console.log('WebSocket is already connected');
         resolve();
         return;
       }
 
+      console.log('Attempting to connect WebSocket...');
       this.ws = new WebSocket('ws://3.36.132.159:10190');
 
       this.ws.onopen = () => {
@@ -60,6 +68,7 @@ class WebSocketService {
         // 저장된 세션이 있다면 자동으로 재접속
         const savedSession = this.restoreSessionInfo();
         if (savedSession) {
+          console.log('Auto-rejoining session:', savedSession);
           this.joinSession({
             channelId: savedSession.channelId,
             userId: savedSession.userId,
@@ -83,6 +92,7 @@ class WebSocketService {
       this.ws.onmessage = (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
+          console.log('Received WebSocket message:', message);
           const handlers = this.eventHandlers[message.type] || [];
           handlers.forEach(handler => handler(message.payload));
         } catch (error) {
@@ -97,11 +107,13 @@ class WebSocketService {
       this.eventHandlers[type] = [];
     }
     this.eventHandlers[type].push(handler);
+    console.log(`Subscribed to ${type} events`);
   }
 
   public unsubscribe(type: WebSocketMessage['type'], handler: (payload: any) => void) {
     if (!this.eventHandlers[type]) return;
     this.eventHandlers[type] = this.eventHandlers[type].filter(h => h !== handler);
+    console.log(`Unsubscribed from ${type} events`);
   }
 
   public send(message: WebSocketMessage) {
@@ -122,6 +134,7 @@ class WebSocketService {
   }
 
   public joinSession(join: JoinMessage) {
+    console.log('Joining session:', join);
     this.saveSessionInfo(join.channelId, join.userId, join.userName);
     this.send({
       type: 'JOIN',
@@ -130,6 +143,7 @@ class WebSocketService {
   }
 
   public leaveSession(userId: string) {
+    console.log('Leaving session for user:', userId);
     this.send({
       type: 'LEAVE',
       payload: { userId }
@@ -156,6 +170,7 @@ class WebSocketService {
   }
 
   public disconnect() {
+    console.log('Disconnecting WebSocket');
     if (this.ws) {
       this.ws.close();
       this.ws = null;
@@ -172,14 +187,62 @@ class WebSocketService {
 
   // 페이지 가시성 변경 감지
   private setupVisibilityHandler() {
+    // visibilitychange 이벤트
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        // 페이지가 다시 보일 때 연결 상태 확인
-        if (this.ws?.readyState !== WebSocket.OPEN) {
-          this.connect();
-        }
-      }
+      console.log('Visibility changed:', document.visibilityState);
+      this.handleVisibilityChange();
     });
+
+    // focus/blur 이벤트
+    window.addEventListener('focus', () => {
+      console.log('Window focused');
+      this.handleVisibilityChange();
+    });
+
+    window.addEventListener('blur', () => {
+      console.log('Window blurred');
+    });
+
+    // 모바일 이벤트
+    document.addEventListener('resume', () => {
+      console.log('App resumed');
+      this.handleVisibilityChange();
+    });
+
+    // 온라인/오프라인 상태 감지
+    window.addEventListener('online', () => {
+      console.log('Device is online');
+      this.handleVisibilityChange();
+    });
+
+    window.addEventListener('offline', () => {
+      console.log('Device is offline');
+    });
+  }
+
+  private handleVisibilityChange() {
+    // 페이지가 보이거나, 포커스를 받거나, 온라인 상태가 되었을 때
+    if (this.ws?.readyState !== WebSocket.OPEN) {
+      console.log('Attempting to reconnect WebSocket...');
+      this.connect()
+        .then(() => {
+          console.log('WebSocket reconnected successfully');
+          // 저장된 세션이 있다면 상태 요청
+          const savedSession = this.restoreSessionInfo();
+          if (savedSession) {
+            console.log('Restoring session:', savedSession);
+            this.send({
+              type: 'REQUEST_CHANNEL_STATE',
+              payload: { channelId: savedSession.channelId }
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Failed to reconnect WebSocket:', error);
+        });
+    } else {
+      console.log('WebSocket is already connected');
+    }
   }
 
   constructor() {
