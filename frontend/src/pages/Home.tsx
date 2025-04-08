@@ -120,7 +120,7 @@ const Home = () => {
         </Typography>
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
-            <Typography variant="h6" gutterBottom>Q2 2023</Typography>
+            <Typography variant="h6" gutterBottom>Q2 2025</Typography>
             <ul style={{ margin: 0, paddingLeft: '1.5rem' }}>
               <li>
                 <Typography>
@@ -135,7 +135,7 @@ const Home = () => {
             </ul>
           </Grid>
           <Grid item xs={12} md={6}>
-            <Typography variant="h6" gutterBottom>Q3 2023</Typography>
+            <Typography variant="h6" gutterBottom>Q3 2025</Typography>
             <ul style={{ margin: 0, paddingLeft: '1.5rem' }}>
               <li>
                 <Typography>
